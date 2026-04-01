@@ -1,3 +1,4 @@
+// Competing Consumer pattern - Heiner Rincón
 package main
 
 import (
