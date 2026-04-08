@@ -1,4 +1,3 @@
-# AKS setup placeholder
 # =============================================================================
 # Taller 1 - Construcción de pipelines en Cloud
 # Integrantes: Heiner Rincón - Mariana De La Cruz
@@ -6,6 +5,8 @@
 # =============================================================================
 
 terraform {
+  required_version = ">= 1.5.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -61,7 +62,7 @@ variable "aks_node_vm_size" {
 variable "kubernetes_version" {
   description = "Versión de Kubernetes"
   type        = string
-  default     = "1.28.5"   # ← CORREGIDO
+  default     = "1.28.5"
 }
 
 # =============================================================================
@@ -75,7 +76,7 @@ locals {
     managed_by  = "terraform"
   }
 
-  acr_name = replace("acr${var.project_name}${var.environment}", "-", "")
+  acr_name = replace(lower("acr${var.project_name}${var.environment}"), "-", "")
   aks_name = "aks-${var.project_name}-${var.environment}"
 }
 
@@ -137,10 +138,12 @@ resource "azurerm_kubernetes_cluster" "aks" {
     node_count     = var.aks_node_count
     vm_size        = var.aks_node_vm_size
     vnet_subnet_id = azurerm_subnet.aks.id
+
     node_labels = {
-      "role" = "general"
+      role = "general"
     }
-    upgrade_settings {        # ← AGREGADO
+
+    upgrade_settings {
       max_surge = "10%"
     }
   }
