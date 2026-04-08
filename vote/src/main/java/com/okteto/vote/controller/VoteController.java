@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.thymeleaf.util.StringUtils;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -53,6 +54,7 @@ public class VoteController {
     }
 
     @PostMapping("/")
+    @CircuitBreaker(name = "kafkaProducer", fallbackMethod = "fallbackVote")  
     String postForm(@CookieValue(name = "voter_id", defaultValue = "") String voterId,
                     @ModelAttribute Vote voteInput,
                     Model model,
@@ -87,6 +89,20 @@ public class VoteController {
             }
         });
 
+        return "index";
+    }
+
+    String fallbackVote(@CookieValue(name = "voter_id", defaultValue = "") String voterId,
+                        @ModelAttribute Vote voteInput,
+                        Model model,
+                        HttpServletResponse response,
+                        Exception e) {
+        logger.warn("Circuit breaker activated. Kafka unavailable: {}", e.getMessage());
+        model.addAttribute("optionA", new Vote().getOptionA());
+        model.addAttribute("optionB", new Vote().getOptionB());
+        model.addAttribute("hostname", new Vote().getHostname());
+        model.addAttribute("vote", null);
+        model.addAttribute("error", "El servicio de votación no está disponible temporalmente.");
         return "index";
     }
 
