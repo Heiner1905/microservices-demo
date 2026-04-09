@@ -13,6 +13,13 @@ terraform {
       version = "~> 3.0"
     }
   }
+
+  backend "azurerm" {
+    resource_group_name  = "rg-microservices-demo"
+    storage_account_name = "stmicroservicesdemo"
+    container_name       = "tfstate"
+    key                  = "microservices-demo.tfstate"
+  }
 }
 
 provider "azurerm" {
@@ -32,7 +39,7 @@ variable "resource_group_name" {
 variable "location" {
   description = "Región de Azure"
   type        = string
-  default     = "eastus"
+  default     = "canadacentral"
 }
 
 variable "environment" {
