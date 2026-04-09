@@ -16,7 +16,7 @@ terraform {
 
   backend "azurerm" {
     resource_group_name  = "rg-microservices-demo"
-    storage_account_name = "stmicroservicesdemo"
+    storage_account_name = "stmicrosvcdemo2025"
     container_name       = "tfstate"
     key                  = "microservices-demo.tfstate"
   }
@@ -29,7 +29,7 @@ provider "azurerm" {
 # =============================================================================
 # VARIABLES
 # =============================================================================
-
+# VARIABLES
 variable "resource_group_name" {
   description = "Nombre del resource group principal"
   type        = string
@@ -66,11 +66,11 @@ variable "aks_node_vm_size" {
   default     = "Standard_B2s"
 }
 
-variable "kubernetes_version" {
-  description = "Versión de Kubernetes"
-  type        = string
-  default     = "1.28.5"
-}
+#variable "kubernetes_version" {
+ #description = "Versión de Kubernetes"
+  #type        = string
+  #default     = "1.29.101"
+#}
 
 # =============================================================================
 # LOCALS
@@ -138,7 +138,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   dns_prefix          = "${var.project_name}-${var.environment}"
-  kubernetes_version  = var.kubernetes_version
+  #kubernetes_version  = var.kubernetes_version
 
   default_node_pool {
     name           = "default"
@@ -160,8 +160,10 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   network_profile {
-    network_plugin = "azure"
-    network_policy = "azure"
+    network_plugin    = "azure"
+    network_policy    = "azure"
+    service_cidr      = "10.1.0.0/16"
+    dns_service_ip    = "10.1.0.10"
   }
 
   tags = local.common_tags
