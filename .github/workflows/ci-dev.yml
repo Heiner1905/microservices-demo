@@ -18,7 +18,7 @@ on:
     branches:
       - develop
 
-env:secrets
+env:
   # Se llena automáticamente con el output de Terraform
   ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
   RESOURCE_GROUP:   ${{ secrets.AZURE_RESOURCE_GROUP }}
@@ -46,7 +46,7 @@ jobs:
 
       - name: Compilar y ejecutar tests (Maven)
         working-directory: vote
-        run: ./mvnw clean verify
+        run: mvn clean verify -B
 
       - name: Login en Azure
         uses: azure/login@v2
@@ -167,6 +167,9 @@ jobs:
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Instalar kubectl
+        uses: azure/setup-kubectl@v3
 
       - name: Obtener credenciales AKS
         run: |
