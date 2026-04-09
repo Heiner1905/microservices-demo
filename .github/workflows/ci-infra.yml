@@ -37,7 +37,7 @@ jobs:
       - name: Configurar Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.6.0"
+          terraform_version: "1.14.8"
 
       - name: Login en Azure
         uses: azure/login@v2
@@ -93,7 +93,7 @@ jobs:
       - name: Configurar Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.6.0"
+          terraform_version: "1.14.8"
 
       - name: Login en Azure
         uses: azure/login@v2
