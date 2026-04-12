@@ -1,0 +1,171 @@
+# =============================================================================
+# Manifiestos Kubernetes — microservices-demo
+# Taller 1: Construcción de pipelines en Cloud
+# Integrantes: Heiner Rincón - Mariana De La Cruz
+#
+# Contiene: Deployment + Service para vote, result y worker
+# =============================================================================
+
+# =============================================================================
+# VOTE — Spring Boot (Java)
+# Circuit Breaker con Resilience4j
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vote
+  namespace: default
+  labels:
+    app: vote
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vote
+  template:
+    metadata:
+      labels:
+        app: vote
+    spec:
+      containers:
+        - name: vote
+          image: acrmicroservicesdemodev.azurecr.io/vote:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vote
+  namespace: default
+spec:
+  type: LoadBalancer
+  selector:
+    app: vote
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+
+---
+# =============================================================================
+# RESULT — Node.js / Socket.io
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: result
+  namespace: default
+  labels:
+    app: result
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: result
+  template:
+    metadata:
+      labels:
+        app: result
+    spec:
+      containers:
+        - name: result
+          image: acrmicroservicesdemodev.azurecr.io/result:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: POSTGRES_HOST
+              value: "postgresql"
+            - name: POSTGRES_USER
+              value: "okteto"
+            - name: POSTGRES_PASSWORD
+              value: "okteto"
+            - name: POSTGRES_DB
+              value: "votes"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: result
+  namespace: default
+spec:
+  type: LoadBalancer
+  selector:
+    app: result
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+
+---
+# =============================================================================
+# WORKER — Go
+# Competing Consumer: 2 réplicas comparten el mismo consumer group
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: default
+  labels:
+    app: worker
+spec:
+  replicas: 2  # Competing Consumer: 2 pods en el mismo consumer group
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: acrmicroservicesdemodev.azurecr.io/worker:latest
+          args:
+            - "--brokerList"
+            - "kafka:9092"
+            - "--topic"
+            - "votes"
+          env:
+            - name: DB_HOST
+              value: "postgresql"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "votes"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: worker-db-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: worker-db-secret
+                  key: DB_PASSWORD
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+# Worker no necesita Service — solo consume de Kafka, no expone puertos

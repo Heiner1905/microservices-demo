@@ -19,3 +19,7 @@
 /vote/vote.iml
 
 /browser_screenshots
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/tfplan
+terraform/.terraform/
