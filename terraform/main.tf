@@ -30,6 +30,7 @@ provider "azurerm" {
 # VARIABLES
 # =============================================================================
 # VARIABLES
+#Comentario para probar el pipeline en un demo 
 variable "resource_group_name" {
   description = "Nombre del resource group principal"
   type        = string
